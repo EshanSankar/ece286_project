@@ -1,12 +1,13 @@
 # TODO:
 # -centering the buttons and text properly
 # -adding a tutorial gif
-# -building the annotation infrastructure
+# -building the experiment
 
 import tkinter as tk
-from PIL import Image
+from PIL import Image, ImageTk
+import cv2
 
-class annotator:
+class App:
     def __init__(self, master):
         self.master = master
         self.master.attributes('-fullscreen', True)
@@ -42,7 +43,7 @@ class annotator:
                                    font=self.BODY_FONT)
         self.text1_guide.grid(row=0, column=0, sticky="s")
         self.text2_guide = tk.Label(self.frame_guide,
-                                   text="For each image, you will be given a small default box, the corners of which you can freely drag such that the box captures the stop sign. \n Here is an example of a good bounding box being drawn:",
+                                   text="For each image, you will be given a small default box, the corners of which you can freely drag such that the box captures the stop sign. \n Press [SPACEBAR] as soon as you are satisfied with your drawing! \n Here is an example of a good bounding box being drawn:",
                                    font=self.BODY_FONT)
         self.text2_guide.grid(row=1, column=0, sticky="s")
         # gif configuration -- NEED TO ADD ANNOTATION GIF
@@ -65,13 +66,14 @@ class annotator:
         for i in self.master.winfo_children():
             i.destroy()
         self.frame_trial = tk.Frame(self.master, width=1920, height=1080)
-        self.frame_trial.columnconfigure(0, minsize=350)
-        self.frame_trial.rowconfigure([0, 1, 2], minsize=200)
         self.frame_trial.pack(expand=True, fill="both")
-        self.button_begin = tk.Button(self.frame_trial, text="Continue", width=25, height=5, command=self.begin_screen)
-        self.button_begin.grid(row=0, column=0)
+        self.button_end = tk.Button(self.frame_trial, text="Done", width=25, height=5, command=self.begin_screen)
+        self.button_end.pack()
+        self.image_cv2 = cv2.imread("Untitled.png", cv2.IMREAD_COLOR)
+        cv2.imshow("Trial Annotation", self.image_cv2)
 
     def begin_screen(self):
+        cv2.destroyAllWindows()
         for i in self.master.winfo_children():
             i.destroy()
         self.frame_begin_screen = tk.Frame(self.master, width=1920, height=1080)
@@ -79,12 +81,12 @@ class annotator:
         self.frame_begin_screen.rowconfigure([0, 1, 2], minsize=200)
         self.frame_begin_screen.pack(expand=True, fill="both")
         self.text_begin = tk.Label(self.frame_begin_screen,
-                                   text="You are about to begin the actual data annotation experiment. \n \'Begin Experiment\' will start a timer and take you to the images.",
+                                   text="You are about to begin the actual data annotation experiment. \n \'Begin Experiment\' will start a timer and take you to the images. \n Remember to press [SPACEBAR] after finishing each box. \n After 10 annotations, the program will finish.",
                                    font=self.HEADER_FONT)
         self.text_begin.grid(row=0, column=0, sticky="s")
         self.button_begin_experiment = tk.Button(self.frame_begin_screen, text="Begin Experiment", width=25, height=5, command=self.begin_experiment)
         self.button_begin_experiment.grid(row=1, column=0, sticky="n")
-        self.button_back = tk.Button(self.frame_begin_screen, text="Back", width=25, height=5, command=self.guide)
+        self.button_back = tk.Button(self.frame_begin_screen, text="Back to Guide", width=25, height=5, command=self.guide)
         self.button_back.grid(row=2, column=0, sticky="n")
 
     def begin_experiment(self):
@@ -97,5 +99,5 @@ class annotator:
     #        self.frame_guide.after(50, self.animation)
 
 root = tk.Tk()
-annotator(root)
+App(root)
 root.mainloop()
