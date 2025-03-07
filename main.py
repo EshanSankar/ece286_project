@@ -25,7 +25,7 @@ class App:
         self.pracTime = 0
         self.home()
     
-    def home(self):
+    def home(self): # Home page
         for i in self.master.winfo_children():
             i.destroy()
         self.frame_home = tk.Frame(self.master, width=1920, height=1080)
@@ -41,7 +41,7 @@ class App:
         self.button_begin = tk.Button(self.frame_home, text="Continue", width=25, height=5, command=self.guide)
         self.button_begin.grid(row=2, column=0)
     
-    def guide(self):
+    def guide(self): # Tutorial page with gif (gif needs to be made, and needs to be less laggy)
         for i in self.master.winfo_children():
             i.destroy()
         self.frame_guide = tk.Frame(self.master, width=1920, height=1080)
@@ -53,7 +53,7 @@ class App:
                                    font=self.BODY_FONT)
         self.text1_guide.grid(row=0, column=0, sticky="s")
         self.text2_guide = tk.Label(self.frame_guide,
-                                   text="For each image, you will be given a small default box, the corners of which you can freely drag such that the box captures the stop sign. \n Press 'Finish' as soon as you are satisfied with your drawing! \n Here is an example of a good bounding box being drawn:",
+                                   text="For each image, you can freely click and drag to create a box that captures the stop sign. \n You can also click and drag pre-created edges to correct them. \n Press 'Finish' as soon as you are satisfied with your drawing! \n Here is an example of a good bounding box being drawn:",
                                    font=self.BODY_FONT)
         self.text2_guide.grid(row=1, column=0, sticky="s")
         # gif configuration -- NEED TO ADD ANNOTATION GIF
@@ -72,7 +72,7 @@ class App:
         self.button_trial = tk.Button(self.frame_guide, text="Do an Example Annotation", width=25, height=5, command=self.trial)
         self.button_trial.grid(row=3, column=0)
 
-    def trial(self):
+    def trial(self): # The testing segment -- opens an OpenCV window
         for i in self.master.winfo_children():
             i.destroy()
         self.fullRectangle = False
@@ -86,9 +86,8 @@ class App:
         cv2.imshow("Annotator", self.image_cv2)
         self.beginTime = time.time()
         
-
-    def begin_screen(self):
-        self.pracTime = time.time() - self.beginTime 
+    def begin_screen(self): # Confirmation screen before starting experiment
+        self.pracTime = time.time() - self.beginTime # Times the test trial's duration
         cv2.destroyAllWindows()
         for i in self.master.winfo_children():
             i.destroy()
@@ -106,17 +105,19 @@ class App:
         self.button_back = tk.Button(self.frame_begin_screen, text="Back to Guide", width=25, height=5, command=self.guide)
         self.button_back.grid(row=2, column=0, sticky="n")
 
-    def begin_experiment(self):
+    def begin_experiment(self): # Haven't implemented this yet
         root.destroy()
     
-    def animation(self): # for gif
+    def animation(self): # For gif, since Tkinter doesn't have built-in gifs
        if self.frames:
            self.gif_guide.config(image=self.photoimage_objects[self.current_frame])
            self.current_frame = self.current_frame + 1 if self.current_frame != self.frames else 0
            self.frame_guide.after(50, self.animation)
 
-    def drawRectangle(self, event, x, y, flags, image):
+    def drawRectangle(self, event, x, y, flags, image): # Main OpenCV data annotation code for bounding boxes
         img = image
+        
+        # This code is for drawing the initial rectangle
         if event == cv2.EVENT_LBUTTONDOWN and not self.isDrawing and not self.fullRectangle:
             self.isDrawing = True
             self.startX, self.startY = x, y
@@ -136,6 +137,8 @@ class App:
             img = self.temp_img
             cv2.imshow("Annotator", img)
         
+        # This is the code for being able to re-drag the rectangle's edges
+        # I probably could have made this more clean
         elif event == cv2.EVENT_LBUTTONDOWN and self.fullRectangle and not self.isModifying:
             self.clickOffsetL = x - self.startX
             self.clickOffsetT = y - self.startY
@@ -182,22 +185,16 @@ class App:
             img = self.temp_img
             cv2.imshow("Annotator", img)
     
-    def calculateIoU(self, ground_truth): #ground truth is a list: [GTstartX, GTstartY, GTendX, GTendY]
+    # Calculates IoU
+    def calculateIoU(self, ground_truth): # ground_truth is a list: [GTstartX, GTstartY, GTendX, GTendY]
         A_measured = (self.endX - self.startX)*(self.endY - self.startY)
         A_ground_truth = (ground_truth[2] - ground_truth[0])*(ground_truth[3] - ground_truth[1])
-        l_union = max(self.endX, ground_truth[2]) - min(self.startX, ground_truth[0])
-        h_union = max(self.endY, ground_truth[3]) - min(self.startY, ground_truth[1])
-        A_union = l_union * h_union
         l_overlap = max(self.startX, ground_truth[0]) - min(self.endX, ground_truth[2]) if ((self.startX > ground_truth[0] and self.startX < ground_truth[2]) or (self.endX > ground_truth[0] and self.endX < ground_truth[2])) else 0
         h_overlap = max(self.startY, ground_truth[1]) - min(self.endY, ground_truth[3]) if ((self.startY > ground_truth[1] and self.startY < ground_truth[3]) or (self.endY > ground_truth[1] and self.endY < ground_truth[3])) else 0
         A_overlap = l_overlap * h_overlap
         A_union = A_measured + A_ground_truth - A_overlap
         IoU = A_overlap / A_union
         return IoU
-
-
-
-            
 
 if __name__ == '__main__':
     root = tk.Tk()
