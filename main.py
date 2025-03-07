@@ -13,6 +13,13 @@ class App:
         self.master.attributes('-fullscreen', True)
         self.HEADER_FONT = "Arial 32 bold"
         self.BODY_FONT = "Arial 14"
+        self.isDrawing = False
+        self.isModifying, self.isModifyingLeft, self.isModifyingRight = False, False, False
+        self.fullRectangle = False
+        self.startX, self.startY, self.endX, self.endY = 0, 0, 0, 0
+        self.clickOffset = 0
+        self.annotatorWindowName = "Annotator"
+        self.temp_img = None
         self.home()
     
     def home(self):
@@ -70,7 +77,10 @@ class App:
         self.button_end = tk.Button(self.frame_trial, text="Done", width=25, height=5, command=self.begin_screen)
         self.button_end.pack()
         self.image_cv2 = cv2.imread("Untitled.png", cv2.IMREAD_COLOR)
-        cv2.imshow("Trial Annotation", self.image_cv2)
+        cv2.namedWindow(self.annotatorWindowName)
+        cv2.setMouseCallback(self.annotatorWindowName, self.drawRectangle, self.image_cv2)
+        cv2.imshow(self.annotatorWindowName, self.image_cv2)
+        
 
     def begin_screen(self):
         cv2.destroyAllWindows()
@@ -98,6 +108,46 @@ class App:
     #        self.current_frame = self.current_frame + 1 if self.current_frame != self.frames else 0
     #        self.frame_guide.after(50, self.animation)
 
-root = tk.Tk()
-App(root)
-root.mainloop()
+    def drawRectangle(self, event, x, y, flags, image):
+        img = image
+        if event == cv2.EVENT_LBUTTONDOWN and not self.isDrawing and not self.fullRectangle:
+            self.isDrawing = True
+            self.startX, self.startY = x, y
+        elif event == cv2.EVENT_MOUSEMOVE and self.isDrawing:
+            self.temp_img = img.copy()
+            cv2.rectangle(self.temp_img, (self.startX, self.startY), (x, y), (255, 0, 0), 3)
+            cv2.imshow(self.annotatorWindowName, self.temp_img)
+        elif event == cv2.EVENT_LBUTTONUP and self.isDrawing and not self.fullRectangle:
+            self.isDrawing = False
+            self.fullRectangle = True
+            self.endX, self.endY = x, y
+            # to preserve logic, might need to reverse start and end
+            if self.endX < self.startX:
+                self.endX, self.startX = self.startX, self.endX
+            if self.endY < self.startY:
+                self.endY, self.startY = self.startY, self.endY
+            img = self.temp_img
+            cv2.imshow(self.annotatorWindowName, img)
+        elif event == cv2.EVENT_LBUTTONDOWN and not self.isDrawing and self.fullRectangle and not self.isModifying:
+            self.clickOffset = x - self.startX
+            if abs(self.clickOffset) <= 50 and y > self.startY and y < self.endY:
+                self.isModifyingLeft = True
+        elif event == cv2.EVENT_MOUSEMOVE and self.isModifyingLeft:
+            self.temp_img = img.copy()
+            cv2.rectangle(self.temp_img, (x - self.clickOffset, self.startY), (self.endX, self.endY), (255, 0, 0), 3)
+            cv2.imshow(self.annotatorWindowName, self.temp_img)
+        elif event == cv2.EVENT_LBUTTONUP and self.isModifyingLeft:
+            self.isModifyingLeft = False
+            self.startX = x
+            if self.endX < self.startX:
+                self.endX, self.startX = self.startX, self.endX
+            img = self.temp_img
+            cv2.imshow(self.annotatorWindowName, img)
+
+
+            
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    App(root)
+    root.mainloop()
