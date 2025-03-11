@@ -1,5 +1,4 @@
 # TODO:
-# -centering the buttons and text properly
 # -adding the actual tutorial gif and fixing the lag
 # -adding the actual experiment images
 
@@ -92,7 +91,7 @@ class App:
             i.destroy()
         print(f"{self.startX}, {self.startY}, {self.endX}, {self.endY}")
         self.frame_begin_screen = tk.Frame(self.master, width=1920, height=1080)
-        self.frame_begin_screen.columnconfigure(0, minsize=350)
+        self.frame_begin_screen.columnconfigure(0, weight=1)
         self.frame_begin_screen.rowconfigure([0, 1, 2], minsize=200)
         self.frame_begin_screen.pack(expand=True, fill="both")
         self.text_begin = tk.Label(self.frame_begin_screen,
