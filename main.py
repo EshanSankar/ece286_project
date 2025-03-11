@@ -19,7 +19,6 @@ class App:
         self.fullRectangle = False
         self.edge_being_modified = None
         self.startX, self.startY, self.endX, self.endY = 0, 0, 0, 0
-        self.clickOffset, self.clickOffsetL, self.clickOffsetT, self.clickOffsetR, self.clickOffsetB = 0, 0, 0, 0, 0
         self.temp_img = None
         self.beginTime = 0
         self.pracTime = 0
@@ -57,17 +56,17 @@ class App:
                                    font=self.BODY_FONT)
         self.text2_guide.grid(row=1, column=0, sticky="s")
         # gif configuration -- NEED TO ADD ANNOTATION GIF
-        file = "annotation.gif" # NEED TO ADD THIS
-        gif = Image.open(file)
-        self.frames = gif.n_frames
-        self.photoimage_objects = []
-        for i in range(self.frames):
-            obj = tk.PhotoImage(file = file, format = f"gif -index {i}")
-            self.photoimage_objects.append(obj)
-        self.gif_guide = tk.Label(self.frame_guide)
-        self.gif_guide.grid(row=2, column=0)
-        self.current_frame = 0
-        self.animation()
+        # file = "annotation.gif" # NEED TO ADD THIS
+        # gif = Image.open(file)
+        # self.frames = gif.n_frames
+        # self.photoimage_objects = []
+        # for i in range(self.frames):
+        #     obj = tk.PhotoImage(file = file, format = f"gif -index {i}")
+        #     self.photoimage_objects.append(obj)
+        # self.gif_guide = tk.Label(self.frame_guide)
+        # self.gif_guide.grid(row=2, column=0)
+        # self.current_frame = 0
+        # self.animation()
         # end gif configuration
         self.button_trial = tk.Button(self.frame_guide, text="Do an Example Annotation", width=25, height=5, command=self.trial)
         self.button_trial.grid(row=3, column=0)
@@ -91,7 +90,7 @@ class App:
         cv2.destroyAllWindows()
         for i in self.master.winfo_children():
             i.destroy()
-        #print(f"{self.startX}, {self.startY}, {self.endX}, {self.endY}")
+        print(f"{self.startX}, {self.startY}, {self.endX}, {self.endY}")
         self.frame_begin_screen = tk.Frame(self.master, width=1920, height=1080)
         self.frame_begin_screen.columnconfigure(0, minsize=350)
         self.frame_begin_screen.rowconfigure([0, 1, 2], minsize=200)
@@ -99,6 +98,8 @@ class App:
         self.text_begin = tk.Label(self.frame_begin_screen,
                                    text=f"Time: {self.pracTime}. IoU: {self.calculateIoU([19, 65, 342, 393])}. \n You are about to begin the actual data annotation experiment. \n 'Begin Experiment' will start a timer and take you to the images. \n Remember to press 'Finish' after finishing each box. \n After 10 annotations, the program will finish.",
                                    font=self.HEADER_FONT)
+        self.startX, self.startY, self.endX, self.endY = 0, 0, 0, 0
+        self.clickOffset, self.clickOffsetL, self.clickOffsetT, self.clickOffsetR, self.clickOffsetB = 0, 0, 0, 0, 0
         self.text_begin.grid(row=0, column=0, sticky="s")
         self.button_begin_experiment = tk.Button(self.frame_begin_screen, text="Begin Experiment", width=25, height=5, command=self.begin_experiment)
         self.button_begin_experiment.grid(row=1, column=0, sticky="n")
@@ -129,7 +130,7 @@ class App:
             self.isDrawing = False
             self.fullRectangle = True
             self.endX, self.endY = x, y
-            # to preserve logic, might need to reverse start and end
+            # To preserve logic, might need to reverse start and end
             if self.endX < self.startX:
                 self.endX, self.startX = self.startX, self.endX
             if self.endY < self.startY:
@@ -138,41 +139,28 @@ class App:
             cv2.imshow("Annotator", img)
         
         # This is the code for being able to re-drag the rectangle's edges
-        # I probably could have made this more clean
         elif event == cv2.EVENT_LBUTTONDOWN and self.fullRectangle and not self.isModifying:
-            self.clickOffsetL = x - self.startX
-            self.clickOffsetT = y - self.startY
-            self.clickOffsetR = x - self.endX
-            self.clickOffsetB = y - self.endY
-
-            self.clickOffsetLR = self.clickOffsetL if abs(self.clickOffsetL) < abs(self.clickOffsetR) else self.clickOffsetR
-            self.lr_being_modified = 'l' if abs(self.clickOffsetL) < abs(self.clickOffsetR) else 'r'
-            self.clickOffsetTB = self.clickOffsetT if abs(self.clickOffsetT) < abs(self.clickOffsetB) else self.clickOffsetB
-            self.tb_being_modified = 't' if abs(self.clickOffsetT) < abs(self.clickOffsetB) else 'b'
-            self.edge_being_modified = self.lr_being_modified if abs(self.clickOffsetLR) < abs(self.clickOffsetTB) else self.tb_being_modified
-            self.clickOffset = self.clickOffsetLR if abs(self.clickOffsetLR) < abs(self.clickOffsetTB) else self.clickOffsetTB
-            if abs(self.clickOffset) > 15:
-                return
-
-            self.clickOffsetL = 0 if self.edge_being_modified != 'l' else self.clickOffsetL
-            self.clickOffsetT = 0 if self.edge_being_modified != 't' else self.clickOffsetT
-            self.clickOffsetR = 0 if self.edge_being_modified != 'r' else self.clickOffsetR
-            self.clickOffsetB = 0 if self.edge_being_modified != 'b' else self.clickOffsetB
-            self.lr_being_modified, self.tb_being_modified = None, None
+            edges = {
+                'l': abs(x - self.startX),
+                't': abs(y - self.startY),
+                'r': abs(x - self.endX),
+                'b': abs(y - self.endY)
+            }
+            self.edge_being_modified = min(edges, key=edges.get)
+            if edges[self.edge_being_modified] > 15:
+                return           
             self.isModifying = True
-            print(self.edge_being_modified)
+            #print(self.edge_being_modified)
         elif event == cv2.EVENT_MOUSEMOVE and self.isModifying:
             self.temp_img = img.copy()
             L = x if self.edge_being_modified == 'l' else self.startX
             T = y if self.edge_being_modified == 't' else self.startY
             R = x if self.edge_being_modified == 'r' else self.endX
             B = y if self.edge_being_modified == 'b' else self.endY
-            cv2.rectangle(self.temp_img, (L - self.clickOffsetL, T - self.clickOffsetT), (R - self.clickOffsetR, B - self.clickOffsetB), (255, 0, 0), 3)
+            cv2.rectangle(self.temp_img, (L, T), (R, B), (255, 0, 0), 3)
             cv2.imshow("Annotator", self.temp_img)
         elif event == cv2.EVENT_LBUTTONUP and self.isModifying:
-            self.isModifying = False
-            self.clickOffset, self.clickOffsetL, self.clickOffsetT, self.clickOffsetR, self.clickOffsetB = 0, 0, 0, 0, 0
-            
+            self.isModifying = False            
             self.startX = x if self.edge_being_modified == 'l' else self.startX
             self.startY = y if self.edge_being_modified == 't' else self.startY
             self.endX = x if self.edge_being_modified == 'r' else self.endX
@@ -189,8 +177,8 @@ class App:
     def calculateIoU(self, ground_truth): # ground_truth is a list: [GTstartX, GTstartY, GTendX, GTendY]
         A_measured = (self.endX - self.startX)*(self.endY - self.startY)
         A_ground_truth = (ground_truth[2] - ground_truth[0])*(ground_truth[3] - ground_truth[1])
-        l_overlap = max(self.startX, ground_truth[0]) - min(self.endX, ground_truth[2]) if ((self.startX > ground_truth[0] and self.startX < ground_truth[2]) or (self.endX > ground_truth[0] and self.endX < ground_truth[2])) else 0
-        h_overlap = max(self.startY, ground_truth[1]) - min(self.endY, ground_truth[3]) if ((self.startY > ground_truth[1] and self.startY < ground_truth[3]) or (self.endY > ground_truth[1] and self.endY < ground_truth[3])) else 0
+        l_overlap = max(self.startX, ground_truth[0]) - min(self.endX, ground_truth[2]) if ((self.startX >= ground_truth[0] and self.startX <= ground_truth[2]) or (self.endX >= ground_truth[0] and self.endX <= ground_truth[2])) else 0
+        h_overlap = max(self.startY, ground_truth[1]) - min(self.endY, ground_truth[3]) if ((self.startY >= ground_truth[1] and self.startY <= ground_truth[3]) or (self.endY >= ground_truth[1] and self.endY <= ground_truth[3])) else 0
         A_overlap = l_overlap * h_overlap
         A_union = A_measured + A_ground_truth - A_overlap
         IoU = A_overlap / A_union
