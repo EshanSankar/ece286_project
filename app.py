@@ -29,18 +29,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.name = ""
         self.distracted = 0 # 0 = no, 1 = yes
         # startX, startY, endX, endY
-        # replace with actual ground truths
-        self.ground_truths = [[370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],
-                              [370, 551, 643, 805],]
+        self.ground_truths = [[370, 551, 642, 806], # example
+                              [289, 573, 599, 891], # 1
+                              [417, 413, 649, 646], # 2
+                              [476, 567, 624, 830], # 3
+                              [346, 511, 824, 964], # 4
+                              [284, 401, 690, 793], # 5
+                              [403, 460, 730, 791], # 6
+                              [253, 529, 535, 802], # 7
+                              [485, 742, 554, 811], # 8
+                              [508, 590, 672, 843], # 9
+                              [114, 832, 506, 1209],] # 10
         
         self.tutorial_gif = QMovie("annotation.gif")
         self.label_gif.setMovie(self.tutorial_gif)
@@ -49,16 +48,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # replace with actual images
         self.images = [cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR),
-                       cv2.imread("images/example.jpg", cv2.IMREAD_COLOR)]
+                       cv2.imread("images/1.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/2.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/3.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/4.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/5.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/6.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/7.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/8.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/9.jpg", cv2.IMREAD_COLOR),
+                       cv2.imread("images/10.jpg", cv2.IMREAD_COLOR)]
         self.c = 0
 
         # defining widget functionality from Ui_MainWindow
@@ -219,8 +218,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             A_overlap = 0
         A_union = A_measured + A_ground_truth - A_overlap
         IoU = A_overlap / A_union
-        print(A_overlap)
-        print(A_union)
         return IoU
 
 
