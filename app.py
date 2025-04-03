@@ -71,7 +71,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.button_finished_tutorial.clicked.connect(self.next_page)
         self.button_guide.clicked.connect(self.back_to_guide)
         self.button_begin.clicked.connect(self.next_page)
-        self.button_begin.clicked.connect(self.begin_experiment)
         self.button_finished.clicked.connect(self.finish_annotation)
         self.lineEdit.textChanged.connect(self.get_data)
         self.button_begin.clicked.connect(self.get_data)
@@ -107,12 +106,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.temp_img = None
         self.IoUs[self.c] = self.calculateIoU(self.results[self.c], self.ground_truths[self.c])
         self.label_start.setText(QtCore.QCoreApplication.translate("MainWindow", f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:700;\">Your Practice Results: Accuracy (IoU): {self.IoUs[0]}. Time (s): {self.times[0]}. </span></p><p align=\"center\"><span style=\" font-size:12pt;\">You are about to begin the actual data annotation experiment. &quot;BEGIN EXPERIMENT&quot; will start a timer and take you to the images. </span></p><p align=\"center\"><span style=\" font-size:12pt;\">You will annotate each of 10 images sequentially. Press &quot;FINISHED&quot; after you are satisfied with each box, and the next image will automatically appear.</span></p><p align=\"center\"><span style=\" font-size:12pt;\">You may return to the guide now if you would like a refresher. If you are ready to start the experiment, please fill out the following:</span></p></body></html>"))
-        if self.stackedWidget.currentIndex() == 5:
-            self.c += 1
-            if self.c < 11:
-                self.display_annotator()
-            if self.c == 11:
-                self.finish_experiment()
+        self.c += 1
+        if self.c < 11:
+            self.display_annotator()
+        if self.c == 11:
+            self.finish_experiment()
 
     def play_gif(self):
         if (self.stackedWidget.currentIndex() == 2):
@@ -131,8 +129,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cv2.setMouseCallback("Annotator", self.drawRectangle, img)
         cv2.imshow("Annotator", img)
         self.begin_time = time.time()
-    def begin_experiment(self):
-        self.c += 1
     def finish_experiment(self):
         self.stackedWidget.setCurrentIndex(6)
         df_results = pd.DataFrame([self.name, self.distracted,
